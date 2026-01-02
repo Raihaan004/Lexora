@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.env.local
+.venv
+env/
+venv.bak/
+env.bak/
+
+# Next.js
+.next/
+out/
+build/
+node_modules/
+
+# Vector Database
+faiss_index/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documents (Keep the folder, ignore the content)
+documents/*
+!documents/.gitkeep
