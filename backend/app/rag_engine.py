@@ -1,4 +1,8 @@
 import os
+# Force offline mode for Hugging Face
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_HUB_OFFLINE"] = "1"
+
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -21,10 +25,29 @@ class RAGEngine:
     def __init__(self):
         # Use CPU for embeddings to avoid CUDA issues if not present
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="all-MiniLM-L6-v2",
-            model_kwargs={'device': device}
-        )
+        try:
+            print("Initializing embeddings model (OFFLINE MODE)...")
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name="all-MiniLM-L6-v2",
+                model_kwargs={
+                    'device': device,
+                    'local_files_only': True
+                }
+            )
+            print("Embeddings model loaded successfully from local cache.")
+        except Exception as e:
+            print(f"Error: Could not load embeddings model locally. {e}")
+            print("Please ensure the model 'all-MiniLM-L6-v2' is downloaded.")
+            # Fallback to Ollama embeddings if HuggingFace fails
+            print("Attempting to use Ollama for embeddings as fallback...")
+            try:
+                from langchain_ollama import OllamaEmbeddings
+                self.embeddings = OllamaEmbeddings(model="mistral")
+                print("Using Ollama (mistral) for embeddings.")
+            except Exception as e2:
+                print(f"Critical Error: All embedding methods failed. {e2}")
+                raise e
+
         self.llm = OllamaLLM(model="mistral")
         self.vector_store = None
         self.load_vector_store()
