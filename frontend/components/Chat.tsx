@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { askQuestion } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
   id: string;
@@ -16,7 +16,7 @@ export default function Chat() {
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I'm Lexora. Upload a document and ask me anything about it.",
+      content: "Welcome to Lexora. I'm your private intelligence assistant. Upload your documents to the left, and I'll help you analyze them instantly.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -43,7 +43,6 @@ export default function Chat() {
     setInput("");
     setIsLoading(true);
 
-    // Create a placeholder for the assistant's message
     const assistantMessageId = (Date.now() + 1).toString();
     const assistantMessage: Message = {
       id: assistantMessageId,
@@ -89,7 +88,7 @@ export default function Chat() {
       setMessages((prev) => 
         prev.map((msg) => 
           msg.id === assistantMessageId 
-            ? { ...msg, content: "Sorry, I encountered an error while processing your request. Make sure the backend is running." } 
+            ? { ...msg, content: "My apologies, but I've encountered a connectivity issue. Please ensure the local intelligence server is active." } 
             : msg
         )
       );
@@ -99,83 +98,109 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen flex-1 flex-col bg-background">
-      <header className="flex h-14 items-center border-b px-6">
-        <h1 className="text-sm font-medium">Chat Session</h1>
+    <div className="flex h-screen flex-1 flex-col bg-zinc-50 dark:bg-[#09090b]">
+      <header className="flex h-16 items-center border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-md px-8 sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <h1 className="text-sm font-bold tracking-tight text-zinc-800 dark:text-zinc-200 uppercase tracking-widest">Active Intelligence Session</h1>
+        </div>
       </header>
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6"
+        className="flex-1 overflow-y-auto px-6 py-10 space-y-8 scroll-smooth"
       >
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex w-full gap-4",
-              message.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
-            {message.role === "assistant" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-muted">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <AnimatePresence>
+            {messages.map((message, index) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className={cn(
+                  "flex w-full gap-5",
+                  message.role === "user" ? "flex-row-reverse" : "flex-row"
+                )}
+              >
+                <div 
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm shadow-sm transition-all duration-300",
+                    message.role === "assistant" 
+                      ? "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-indigo-500" 
+                      : "bg-indigo-600 border-indigo-500 text-white"
+                  )}
+                >
+                  {message.role === "assistant" ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                </div>
+                
+                <div
+                  className={cn(
+                    "max-w-[75%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-sm ring-1",
+                    message.role === "user"
+                      ? "bg-indigo-600 text-white ring-indigo-500"
+                      : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 ring-zinc-200 dark:ring-zinc-800"
+                  )}
+                >
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          
+          {isLoading && !messages[messages.length-1].content && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex w-full justify-start gap-4"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-white dark:bg-zinc-900 text-indigo-500 border-zinc-200 dark:border-zinc-800">
                 <Bot className="h-5 w-5" />
               </div>
-            )}
-            <div
-              className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm",
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
-              )}
-            >
-              {message.content}
-            </div>
-            {message.role === "user" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-primary text-primary-foreground">
-                <User className="h-5 w-5" />
+              <div className="flex items-center gap-1.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-5 py-4 text-sm shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce" />
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.4s]" />
               </div>
-            )}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex w-full justify-start gap-4">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-muted">
-              <Bot className="h-5 w-5" />
-            </div>
-            <div className="flex items-center rounded-2xl bg-muted px-4 py-2 text-sm shadow-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </div>
       </div>
 
-      <div className="border-t p-4">
-        <div className="mx-auto max-w-3xl relative">
-          <textarea
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Ask a question about your documents..."
-            className="w-full resize-none rounded-xl border bg-background px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-2 rounded-lg bg-primary p-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+      <div className="border-t border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-950">
+        <div className="mx-auto max-w-4xl relative">
+          <div className="group relative transition-all duration-300">
+            <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 opacity-20 blur group-within:opacity-40 transition duration-300" />
+            <div className="relative flex items-center bg-white dark:bg-zinc-900 rounded-2xl ring-1 ring-zinc-200 dark:ring-zinc-800 overflow-hidden px-1">
+              <textarea
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Ask your documents. Make inquiries. Extract knowledge..."
+                className="w-full resize-none border-none bg-transparent px-4 py-4 text-sm focus:ring-0 text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-all hover:bg-indigo-500 active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 m-2"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between text-[10px] text-zinc-500 font-medium px-2 uppercase tracking-widest">
+            <span className="flex items-center gap-1.5 ring-1 ring-zinc-200 dark:ring-zinc-800 rounded-full px-2 py-0.5 bg-zinc-50 dark:bg-zinc-900">
+              <Sparkles className="h-3 w-3 text-amber-500" /> Powered by Mistral 7B
+            </span>
+            <span>Local Encryption Active</span>
+          </div>
         </div>
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">
-          Lexora can make mistakes. Check important info.
-        </p>
       </div>
     </div>
   );
